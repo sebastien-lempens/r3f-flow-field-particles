@@ -28,7 +28,7 @@ const World = () => {
 
       {/* <Clone object={mesh} scale={0.25}></Clone> */}
       <Environment preset="apartment" ground={{scale:5, height:4, radius:25}} background resolution={1024*2}  />
-      <ambientLight intensity={1.2} />
+      <ambientLight intensity={1.0} />
     </>
   );
 };
