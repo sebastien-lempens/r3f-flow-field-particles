@@ -8,13 +8,13 @@ const World = () => {
   const { pug: mesh } = nodes;
   const { size, chaosIntensity } = useControls({
     size: {
-      value: 0.1,
+      value: 0.5,
       step: 0.1,
       min: 0,
       max: 2,
     },
     chaosIntensity: {
-      value: 0.2,
+      value: 0.5,
       step: 0.1,
       min: 0,
       max: 1,
@@ -22,7 +22,7 @@ const World = () => {
   });
   return (
     <>
-      <FlowFieldParticles size={size} chaosIntensity={chaosIntensity}   position={[0, 0, 0]} scale={0.25}>
+      <FlowFieldParticles size={size} chaosIntensity={chaosIntensity}   position={[0, 0, 0]} scale={1}>
         <Clone object={mesh} />
       </FlowFieldParticles>
 
