@@ -22,18 +22,14 @@ const GpgpuFragmentShader = /*glsl*/ `
     vec4 particle =  texture2D(uParticles, uv);
     vec4 baseParticle = texture2D(uBaseParticlesTexture, uv);
 
-    float uRepelStrength = 0.02;
+    float uRepelStrength = 0.2;
     vec2 particlePos = particle.xy;
     vec2 mousePos = uMouse;
     float dist = distance(mousePos, particlePos);
     vec2 dir = normalize(particlePos - mousePos);
-    float centeredUv = distance(uv, vec2(0.5));
-    float repulsionForce = uRepelStrength / (dist * (dist + 0.2));
-    // vec3 camDir = normalize(uCameraPosition - particle.xyz);
- 
+    float repulsionForce = uRepelStrength / (dist * (dist + 1.0));
     vec2 repulsion = dir * repulsionForce;
-
-    particle.xy += repulsion;
+    particle.xy += repulsion * uRepelStrength * uRepelStrength;
     
     
     if (particle.a >= 1.0) {
@@ -41,14 +37,14 @@ const GpgpuFragmentShader = /*glsl*/ `
         particle.xyz = baseParticle.xyz;
     } 
     else {
-        float timer = uTime / 30.0;
+        float timer = uTime / 4.0;
         vec3 flowField = vec3(
             snoise(vec4(particle.xyz, timer )),
             snoise(vec4(particle.yxz, timer )),
             snoise(vec4(particle.zxy, timer ))
         );
         float chaosIntensity = uChaosIntensity;
-        flowField = normalize(flowField);
+        flowField = normalize(flowField) * 1.0;
         particle.xyz += flowField * chaosIntensity * uDeltaTime * particle.a;
         particle.a += uDeltaTime;
     }
@@ -244,14 +240,15 @@ const FlowFieldParticles = ({ colors, position = [0, 0, 0], size = 0.1, chaosInt
       }
     }
   }, [children, colors]);
-  useFrame(({ clock, pointer, camera }, delta) => {
+  useFrame(({ clock, pointer, camera, viewport }, delta) => {
     const elapsedTime = clock.getElapsedTime();
+    const { width, height, distance } = viewport.getCurrentViewport();
     if (particlesMaterialRef.current) {
       gpgpu.ref.compute();
-      mouseRef.current.set(pointer.x, pointer.y);
+      mouseRef.current.set((pointer.x * (width + distance / 2)) / 2, (pointer.y * height + distance / 2) / 2);
       gpgpu.particlesVariable.material.uniforms.uTime.value = elapsedTime;
       gpgpu.particlesVariable.material.uniforms.uDeltaTime.value = delta;
-      gpgpu.particlesVariable.material.uniforms.uMouse.value = pointer;
+      gpgpu.particlesVariable.material.uniforms.uMouse.value.copy(mouseRef.current);
       gpgpu.particlesVariable.material.uniforms.uMouseDelta.value = 0.0;
       gpgpu.particlesVariable.material.uniforms.uMeshMap.value = childrenMeshRef.current.material.map;
       gpgpu.particlesVariable.material.uniforms.uCameraPosition.value.copy(camera.position);
@@ -261,22 +258,22 @@ const FlowFieldParticles = ({ colors, position = [0, 0, 0], size = 0.1, chaosInt
       particlesMaterialRef.current.uniforms.uDeltaTime.value = delta;
       particlesMaterialRef.current.uniforms.uMouse.value.copy(mouseRef.current);
       particlesMaterialRef.current.uniforms.uChaosIntensity.value = chaosIntensity;
-      helperRef.current.position.set(pointer.x, pointer.y, 0.5);
+      helperRef.current.position.set(mouseRef.current.x, mouseRef.current.y, 0);
     }
   });
 
   return (
     <>
-    <group position={position} scale={scale}>
-      <points ref={particleslRef} geometry={particles.geometry}>
-        <particlesMaterial ref={particlesMaterialRef} attach='material' />
-      </points>
-      <mesh visible={false} geometry={childrenMeshRef.current.geometry} material={childrenMeshRef.current.material}></mesh>
-    </group>
-    <Sphere ref={helperRef} position={[0, 0, 0]} scale={0.1}>
-      <meshBasicMaterial color='red' />
-    </Sphere>
-      <Plane  visible={false} args={[3, 3, 1, 1]} position={[0, 0, 0]} rotation={[0, 0, 0]}>
+      <group position={position} scale={scale}>
+        <points ref={particleslRef} geometry={particles.geometry}>
+          <particlesMaterial ref={particlesMaterialRef} attach='material' />
+        </points>
+        <mesh visible={false} geometry={childrenMeshRef.current.geometry} material={childrenMeshRef.current.material}></mesh>
+      </group>
+      <Sphere ref={helperRef} position={[0, 0, 0]} scale={0.1}>
+        <meshBasicMaterial color='red' />
+      </Sphere>
+      <Plane visible={false} args={[3, 3, 1, 1]} position={[0, 0, 0]} rotation={[0, 0, 0]}>
         <meshBasicMaterial map={gpgpu.texture} />
       </Plane>
     </>

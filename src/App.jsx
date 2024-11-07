@@ -34,7 +34,7 @@ const World = () => {
   });
   return (
     <>
-      <FlowFieldParticles size={size} chaosIntensity={chaosIntensity} position={[0, 0, 0]} scale={1}>
+      <FlowFieldParticles size={size} chaosIntensity={chaosIntensity} colors={['orange', 'purple']} position={[0, 0, 0]} scale={1}>
         <Clone object={mesh} />
       </FlowFieldParticles>
 
