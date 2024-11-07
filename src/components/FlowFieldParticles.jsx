@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from "react";
 import { useFrame, useThree, extend } from "@react-three/fiber";
 import { GPUComputationRenderer } from "three/addons/misc/GPUComputationRenderer.js";
-import { BufferGeometry, BufferAttribute, Color, Uniform, Vector2, Vector3 } from "three";
-import { shaderMaterial, useTrailTexture } from "@react-three/drei";
+import { BufferGeometry, BufferAttribute, Color, Uniform, Vector2, Vector3, Matrix4 } from "three";
+import { shaderMaterial, Sphere, useTrailTexture } from "@react-three/drei";
 import { Plane } from "@react-three/drei";
 import { useMemo } from "react";
 const GpgpuFragmentShader = /*glsl*/ `
@@ -10,6 +10,7 @@ const GpgpuFragmentShader = /*glsl*/ `
   uniform float uDeltaTime;
   uniform float uMouseDelta;
   uniform float uChaosIntensity;
+  uniform vec3 uCameraPosition;
   uniform vec2 uMouse;
   uniform sampler2D uMeshMap;
   uniform sampler2D uBaseParticlesTexture;
@@ -18,49 +19,50 @@ const GpgpuFragmentShader = /*glsl*/ `
   void main() {
     // resolution + uParticles are given by the GPUComputationRenderer
     vec2 uv = gl_FragCoord.xy / resolution.xy;
- 
     vec4 particle =  texture2D(uParticles, uv);
     vec4 baseParticle = texture2D(uBaseParticlesTexture, uv);
-    vec2 mouse = uMouse;
+
+    float uRepelStrength = 0.02;
+    vec2 particlePos = particle.xy;
+    vec2 mousePos = uMouse;
+    float dist = distance(mousePos, particlePos);
+    vec2 dir = normalize(particlePos - mousePos);
+    float centeredUv = distance(uv, vec2(0.5));
+    float repulsionForce = uRepelStrength / (dist * (dist + 0.2));
+    // vec3 camDir = normalize(uCameraPosition - particle.xyz);
+ 
+    vec2 repulsion = dir * repulsionForce;
+
+    particle.xy += repulsion;
+    
+    
     if (particle.a >= 1.0) {
         particle.a = mod(particle.a, 1.0); 
         particle.xyz = baseParticle.xyz;
     } 
     else {
         float timer = uTime / 30.0;
-        float uRepelStrength = 0.05;
-
-        // Génération du flowField pour l'animation
-        vec2 mousePos = mouse * 0.5 + 0.5;
-        vec2 particlePos =  particle.xy * 0.5 + 0.5;
-        //vec2 cameraPos = cameraPosition.xy;
-        particlePos.y -= 0.5;
-        particlePos.x -= 0.5;
-        
-        vec3 direction = vec3(particlePos - mousePos, 0.0);
-        float distance = length(direction);
-        direction = normalize(direction);
         vec3 flowField = vec3(
             snoise(vec4(particle.xyz, timer )),
             snoise(vec4(particle.yxz, timer )),
             snoise(vec4(particle.zxy, timer ))
         );
-        
         float chaosIntensity = uChaosIntensity;
         flowField = normalize(flowField);
-
-        float repelForce = uRepelStrength / distance * (distance + 1.0);  // Atténuation de la répulsion avec la distance
-         
-        particle.xyz += (direction * repelForce * uDeltaTime) +  (flowField * chaosIntensity * uDeltaTime * particle.a);
+        particle.xyz += flowField * chaosIntensity * uDeltaTime * particle.a;
         particle.a += uDeltaTime;
     }
+
     gl_FragColor.rgba = particle;
 }
 
 `;
 const ParticlesVertexShader = /*glsl*/ `
   uniform float uTime;
+  uniform float uDeltaTime;
+  uniform float uChaosIntensity;
   uniform float uSize;
+  uniform vec2 uMouse;
   uniform vec3 uColors[2];
   uniform sampler2D uParticlesTexture;
   uniform vec2 uResolution;
@@ -74,15 +76,34 @@ const ParticlesVertexShader = /*glsl*/ `
   varying vec3 vPosition;
   varying float vParticlesAlpha;
   varying vec2 vMeshUv;
+
   void main() {
     vec4 particle = texture2D(uParticlesTexture, aParticlesUv);
+
+    float uRepelStrength = 0.6;
+    vec4 mouseViewPosition = viewMatrix * vec4(uMouse, 0.0, 1.0);
+    vec2 mousePos = vec2(mouseViewPosition.x+mouseViewPosition.z, mouseViewPosition.y);
+    
+    vec4 particleViewPosition =  viewMatrix * vec4(particle.xyz, 1.0);
+    vec2 particlePos = particleViewPosition.xy;
+
+    float dist = distance(mousePos, particlePos);
+    float repulsionForce = uRepelStrength / (dist * (dist + 1.0));
+    vec2 repulsion = normalize(particlePos-mousePos) * repulsionForce;
+    
+    //particle.xy += repulsion;
+
     vec4 modelPosition = modelMatrix * vec4(particle.xyz, 1.0);
     vec4 viewPosition = viewMatrix * modelPosition;
     vec4 projectedPosition = projectionMatrix * viewPosition;
+
+   // projectedPosition.xy += repulsion;
+
     gl_Position = projectedPosition;
+
     /* Point Size */
     float lifeSize = 1.0-smoothstep(0.0, 1.0, particle.a);
-    gl_PointSize = aParticlesSize * lifeSize * uSize * uResolution.y;
+    gl_PointSize = aParticlesSize * lifeSize * uSize * uResolution.y * (1.0-repulsionForce);
     gl_PointSize *= (1.0 / - viewPosition.z);
     /* Variables to the fragment Shader */
     vColor = uColors;
@@ -104,7 +125,7 @@ const ParticlesFragmentShader = /*glsl*/ `
   void main() {
       vec2 uv = gl_PointCoord.xy;
       float circle = length(uv - vec2(0.5));
-      vec3 diffuseMap = texture2D(uMeshMap,vMeshUv).rgb;
+      vec3 diffuseMap = texture2D(uMeshMap, vMeshUv).rgb;
       circle = smoothstep(0.5, 0.49, circle);
       if(circle < 0.1) discard;
       vec3 color = vec3(1.0);
@@ -119,9 +140,12 @@ const ParticlesFragmentShader = /*glsl*/ `
 const ParticlesMaterial = shaderMaterial(
   {
     uTime: 0,
+    uDeltaTime: 0,
+    uChaosIntensity: 0,
     uSize: 0.4,
     uColors: [],
     uMeshMap: null,
+    uMouse: new Vector2(0, 0),
     uParticlesTexture: null,
     uResolution: [0, 0],
   },
@@ -132,8 +156,9 @@ extend({ ParticlesMaterial });
 const FlowFieldParticles = ({ colors, position = [0, 0, 0], size = 0.1, chaosIntensity = 0.3, scale = 1, children }) => {
   const childrenMeshRef = useRef(null);
   const particleslRef = useRef(null);
+  const helperRef = useRef(null);
   const particlesMaterialRef = useRef(null);
-  const mouseAttenutation = useRef(new Vector2(0, 0));
+  const mouseRef = useRef(new Vector2(0, 0));
   const gl = useThree(state => state.gl);
   const { type } = children;
   let mesh = null;
@@ -177,6 +202,7 @@ const FlowFieldParticles = ({ colors, position = [0, 0, 0], size = 0.1, chaosInt
     particlesVariable.material.uniforms.uMouse = new Uniform(new Vector2(0, 0));
     particlesVariable.material.uniforms.uMouseDelta = new Uniform(0);
     particlesVariable.material.uniforms.uMeshMap = new Uniform(0);
+    particlesVariable.material.uniforms.uCameraPosition = new Uniform(new Vector3(0, 0, 0));
 
     return { ref: GCR, texture: renderTargetTexture, particlesVariable, size };
   }, [children]);
@@ -189,8 +215,10 @@ const FlowFieldParticles = ({ colors, position = [0, 0, 0], size = 0.1, chaosInt
         const i2 = i * 2;
         const uvX = (x + 0.5) / gpgpu.size; // (x+0.5) pour centrer le px
         const uvY = (y + 0.5) / gpgpu.size;
+        // Set UV Position
         particlesUvArray[i2 + 0] = uvX;
         particlesUvArray[i2 + 1] = uvY;
+        // Random size
         particlesSizeArray[i] = Math.random();
       }
     }
@@ -220,27 +248,38 @@ const FlowFieldParticles = ({ colors, position = [0, 0, 0], size = 0.1, chaosInt
     const elapsedTime = clock.getElapsedTime();
     if (particlesMaterialRef.current) {
       gpgpu.ref.compute();
+      mouseRef.current.set(pointer.x, pointer.y);
       gpgpu.particlesVariable.material.uniforms.uTime.value = elapsedTime;
       gpgpu.particlesVariable.material.uniforms.uDeltaTime.value = delta;
       gpgpu.particlesVariable.material.uniforms.uMouse.value = pointer;
+      gpgpu.particlesVariable.material.uniforms.uMouseDelta.value = 0.0;
+      gpgpu.particlesVariable.material.uniforms.uMeshMap.value = childrenMeshRef.current.material.map;
+      gpgpu.particlesVariable.material.uniforms.uCameraPosition.value.copy(camera.position);
       particlesMaterialRef.current.uniforms.uResolution.value = [gpgpu.size, gpgpu.size];
       particlesMaterialRef.current.uniforms.uParticlesTexture.value = gpgpu.ref.getCurrentRenderTarget(gpgpu.particlesVariable).texture;
       particlesMaterialRef.current.uniforms.uTime.value = elapsedTime;
-      gpgpu.particlesVariable.material.uniforms.uMouseDelta.value = 0.0;
-      gpgpu.particlesVariable.material.uniforms.uMeshMap.value = childrenMeshRef.current.material.map;
+      particlesMaterialRef.current.uniforms.uDeltaTime.value = delta;
+      particlesMaterialRef.current.uniforms.uMouse.value.copy(mouseRef.current);
+      particlesMaterialRef.current.uniforms.uChaosIntensity.value = chaosIntensity;
+      helperRef.current.position.set(pointer.x, pointer.y, 0.5);
     }
   });
 
   return (
+    <>
     <group position={position} scale={scale}>
       <points ref={particleslRef} geometry={particles.geometry}>
         <particlesMaterial ref={particlesMaterialRef} attach='material' />
       </points>
-      <Plane visible={false} args={[3, 3, 1, 1]} position={[0, 0, 0]} rotation={[0, 0, 0]}>
-        <meshBasicMaterial map={gpgpu.texture} />
-      </Plane>
       <mesh visible={false} geometry={childrenMeshRef.current.geometry} material={childrenMeshRef.current.material}></mesh>
     </group>
+    <Sphere ref={helperRef} position={[0, 0, 0]} scale={0.1}>
+      <meshBasicMaterial color='red' />
+    </Sphere>
+      <Plane  visible={false} args={[3, 3, 1, 1]} position={[0, 0, 0]} rotation={[0, 0, 0]}>
+        <meshBasicMaterial map={gpgpu.texture} />
+      </Plane>
+    </>
   );
 };
 

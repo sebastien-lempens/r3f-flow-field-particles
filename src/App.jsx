@@ -1,6 +1,18 @@
 import React, { useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls, useGLTF, Clone, Wireframe, Edges, MeshDiscardMaterial, Outlines, Stage, Backdrop, ContactShadows, Environment } from "@react-three/drei";
+import {
+  OrbitControls,
+  useGLTF,
+  Clone,
+  Wireframe,
+  Edges,
+  MeshDiscardMaterial,
+  Outlines,
+  Stage,
+  Backdrop,
+  ContactShadows,
+  Environment,
+} from "@react-three/drei";
 import { Leva, useControls, folder } from "leva";
 import { FlowFieldParticles } from "./components/FlowFieldParticles";
 const World = () => {
@@ -22,12 +34,12 @@ const World = () => {
   });
   return (
     <>
-      <FlowFieldParticles size={size} chaosIntensity={chaosIntensity}   position={[0, 0, 0]} scale={1}>
+      <FlowFieldParticles size={size} chaosIntensity={chaosIntensity} position={[0, 0, 0]} scale={1}>
         <Clone object={mesh} />
       </FlowFieldParticles>
 
       {/* <Clone object={mesh} scale={0.25}></Clone> */}
-      <Environment preset="apartment" ground={{scale:5, height:4, radius:25}} background resolution={1024*2}  />
+      <Environment preset='apartment' ground={{ scale: 5, height: 4, radius: 25 }} background resolution={1024 * 2} />
       <ambientLight intensity={1.0} />
     </>
   );
