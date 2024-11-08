@@ -36,8 +36,8 @@ const GpgpuFragmentShader = /*glsl*/ `
         particle.xyz = baseParticle.xyz;
     } 
     else {
-        float timer = uTime / 10.0;
         float disturbIntensity = 0.5 + pow(uDisturbIntensity, 4.0);
+        float timer = uDeltaTime * disturbIntensity;
         vec3 flowField = vec3(
             snoise(vec4(particle.xyz + disturbIntensity, timer )),
             snoise(vec4(particle.yxz + disturbIntensity, timer )),
@@ -98,7 +98,8 @@ const ParticlesFragmentShader = /*glsl*/ `
       vec2 uv = gl_PointCoord.xy;
       float circle = length(uv - vec2(0.5));
       vec3 diffuseMap = texture2D(uMeshMap, vMeshUv).rgb;
-      circle = smoothstep(0.5, 0.49, circle);
+      circle = smoothstep(0.3, 0.0, circle);
+      circle -= smoothstep(0.3, 0.51, circle);
       if(circle < 0.01) discard;
       vec3 color = vec3(1.0);
       if (vColor[0].x > 0.0 && vColor[1].x > 0.0) {

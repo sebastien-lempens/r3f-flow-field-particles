@@ -35,14 +35,14 @@ const World = () => {
     pug_intensity,
   } = useControls({
     Suzanne: folder({
-      suzanne_size: { label: "Size", value: 0.45, min: 0.1, max: 3 },
+      suzanne_size: { label: "Size", value: 0.45, min: 0.1, max: 6 },
       suzanne_intensity: { label: "Disturb Intensity", value: 0.5, min: 0, max: 1 },
       suzanne_color_1: { label: "Color 1", value: "#e35500" },
       suzanne_color_2: { label: "Color 2", value: "#42cbfc" },
       suzanne_shade_color: { label: "Shade Color", value: true },
     }),
     Gorilla: folder({
-      gorilla_size: { label: "Size", value: 1, min: 0.1, max: 3 },
+      gorilla_size: { label: "Size", value: 1, min: 0.1, max: 8 },
       gorilla_intensity: { label: "Disturb Intensity", value: 0.5, min: 0, max: 1 },
       gorilla_color_1: { label: "Color 1", value: "#ff710d" },
       gorilla_color_2: { label: "Color 2", value: "#ff0000" },
@@ -78,9 +78,11 @@ const World = () => {
 
       <Grid visible={true} cellSize={0.2} sectionSize={0.3} cellThickness={1} cellColor={'black'} sectionColor={'rgba(255,255,255,0.2)'} followCamera fadeDistance={30} fadeStrength={5} infiniteGrid args={[20, 20]} />
       <EffectComposer>
-        <DepthOfField focusDistance={0.01} focalLength={0.05} bokehScale={2} height={480} />
+       
         <Bloom luminanceThreshold={0.0} luminanceSmoothing={0.9} radius={0.2} height={300} mipmapBlur />
-        {/* <Noise opacity={0.02} />
+        {/* 
+        <Noise opacity={0.02} />
+         <DepthOfField focusDistance={0.01} focalLength={0.05} bokehScale={2} height={480} />
          */}
          <Vignette eskil={false} offset={0.1} darkness={1.1} />
       </EffectComposer>
