@@ -3,7 +3,6 @@ import { useFrame, useThree, extend } from "@react-three/fiber";
 import { Plane, ScreenSizer, Box, shaderMaterial, Sphere } from "@react-three/drei";
 import { BufferGeometry, BufferAttribute, Color, Uniform, Vector3, Mesh, MathUtils } from "three";
 import { GPUComputationRenderer } from "three/addons/misc/GPUComputationRenderer.js";
-import { bool } from "three/webgpu";
 
 const GpgpuFragmentShader = /*glsl*/ `
   uniform float uTime;
@@ -61,10 +60,13 @@ const ParticlesVertexShader = /*glsl*/ `
   attribute vec2 aMeshUv;
   attribute float aParticlesSize;
   attribute vec3 aParticlesColor;
+  attribute vec3 aNormal;
   varying vec3 vColor[2];
   varying vec3 vPosition;
   varying float vParticlesAlpha;
   varying vec2 vMeshUv;
+  varying vec3 vViewPosition;
+  varying vec3 vNormal;
 
   void main() {
     vec4 particle = texture2D(uParticlesTexture, aParticlesUv);
@@ -84,48 +86,101 @@ const ParticlesVertexShader = /*glsl*/ `
     vPosition = position.xyz;
     vParticlesAlpha = particle.a;
     vMeshUv = aMeshUv;
+    vViewPosition = viewPosition.xyz;
+    vNormal = aNormal;
   }
 `;
 const ParticlesFragmentShader = /*glsl*/ `
+  uniform float uTime;
   uniform sampler2D uMeshMap;
-  uniform bool uShadeColor;
+  uniform int uShape; // 1: disc | 2: ring | 3: sphere | 4: square
+  uniform vec3 uLightSource;
   varying vec3 vColor[2];
   varying vec3 vViewPosition;
   varying float vParticlesAlpha;
   varying vec2 vMeshUv;
   varying vec3 vPosition;
+  varying vec3 vNormal;
+
+ 
+
   void main() {
       vec2 uv = gl_PointCoord.xy;
-      float circle = length(uv - vec2(0.5));
       vec3 diffuseMap = texture2D(uMeshMap, vMeshUv).rgb;
-      circle = smoothstep(0.3, 0.0, circle);
-      circle -= smoothstep(0.3, 0.51, circle);
+      float circle = 1.0;
+      if (uShape == 1) {
+        circle = 1.0-length(uv - vec2(0.5));
+        circle = smoothstep(0.5, 0.51, circle);
+      } 
+       if (uShape == 2) {
+        circle = length(uv - vec2(0.5));
+        circle = smoothstep(0.4, 0.4+0.1, circle);
+        circle -= smoothstep(0.6, 0.6+0.1, circle);
+      }
+      if (uShape == 3) {
+          circle = length(uv - vec2(0.5));
+          circle = smoothstep(0.5, 0.0, circle);
+      }
       if(circle < 0.01) discard;
+
+      /* Lighting */
+      vec3 lightDir = normalize(uLightSource - vPosition);
+      vec3 normal = normalize(vNormal);
+      vec3 reflectDir = reflect(-lightDir, normal);
+      vec3 viewDir = normalize(cameraPosition - vPosition);
+      float light = max(dot(normal, lightDir), 0.08);
+      float specular = pow(max(dot(viewDir, reflectDir), 0.0), 3.0);
+
+      float circleSphere =  length(uv - vec2(0.5));
+      circleSphere = smoothstep(0.8, 0.0, circleSphere);
+      circleSphere = smoothstep(0.0, 1.0, circleSphere);
+      circleSphere = pow(circleSphere, 0.55);
+      
+      
+
       vec3 color = vec3(1.0);
       if (vColor[0].x > 0.0 && vColor[1].x > 0.0) {
-        float colorType = uShadeColor ? 1.0-gl_PointCoord.y : smoothstep(0.0, 1.0, 1.0-vPosition.y);
+        float colorType = (uShape == 3) ? circleSphere  : smoothstep(0.0, 1.0, 1.0-vPosition.y);
         color = mix(vColor[0], vColor[1], colorType);
       } else {
         color = diffuseMap;
       }
+      color *= light  + specular;
+ 
       gl_FragColor.rgba = vec4(color, 1.0);
   }
 `;
 const ParticlesMaterial = shaderMaterial(
   {
+    uTime: 0,
     uSize: 0.4,
-    uShadeColor: bool,
     uColors: [],
+    uShape: 1,
     uMeshMap: null,
     uParticlesTexture: null,
     uResolution: [0, 0],
+    uLightSource: new Vector3(),
   },
   ParticlesVertexShader,
   ParticlesFragmentShader
 );
+const ParticleShapeIntValue = shapeString => {
+  switch (shapeString) {
+    case "disc":
+      return 1;
+    case "ring":
+      return 2;
+    case "sphere":
+      return 3;
+    case "square":
+      return 4;
+    default:
+      return 1;
+  }
+};
 extend({ ParticlesMaterial });
 
-const FlowFieldParticles = ({ colors, size = 0.1, disturbIntensity = 0.3, shadeColor=false, children }) => {
+const FlowFieldParticles = ({ colors, size = 0.1, disturbIntensity = 0.3, shape = "disc", lightSource = null, children }) => {
   const particleslRef = useRef(null);
   const meshChildrenRef = useRef(null);
   const meshRef = useRef(null);
@@ -152,9 +207,9 @@ const FlowFieldParticles = ({ colors, size = 0.1, disturbIntensity = 0.3, shadeC
         mesh.position.copy(new Vector3().fromArray(position));
       }
     }
-
     if (!mesh) throw "<FlowFieldParticles /> must have a mesh as a child";
     meshChildrenRef.current = mesh;
+
     return mesh;
   }, [children]);
 
@@ -214,7 +269,8 @@ const FlowFieldParticles = ({ colors, size = 0.1, disturbIntensity = 0.3, shadeC
     geometry.setDrawRange(0, modelGeometry.count);
     geometry.setAttribute("aParticlesUv", new BufferAttribute(particlesUvArray, 2));
     geometry.setAttribute("aParticlesSize", new BufferAttribute(particlesSizeArray, 1));
-    modelGeometry.attributes.color && geometry.setAttribute("aParticlesColor", new BufferAttribute(modelGeometry.attributes.color.array, 3));
+    modelGeometry.attributes.color &&
+      geometry.setAttribute("aParticlesColor", new BufferAttribute(modelGeometry.attributes.color.array, 3));
     modelGeometry.attributes.position && geometry.setAttribute("position", new BufferAttribute(modelGeometry.attributes.position.array, 3));
     modelGeometry.attributes.uv && geometry.setAttribute("aMeshUv", new BufferAttribute(modelGeometry.attributes.uv.array, 2));
     return { geometry, material: null, uvAttribute: particlesUvArray };
@@ -229,17 +285,25 @@ const FlowFieldParticles = ({ colors, size = 0.1, disturbIntensity = 0.3, shadeC
   }, []);
 
   useEffect(() => {
+    if (particleslRef.current) {
+      particleslRef.current.geometry.setAttribute("aNormal", modelGeometry.attributes.normal);
+    }
     if (particlesMaterialRef.current) {
       const colorsArray = colors?.map(color => new Color(color)) || [new Color("black"), new Color("black")];
       particlesMaterialRef.current.transparent = true;
       particlesMaterialRef.current.uniforms.uColors.value = colorsArray;
       particlesMaterialRef.current.uniforms.uSize.value = size;
-      particlesMaterialRef.current.uniforms.uShadeColor.value = shadeColor;
+
+      if (lightSource) {
+        particlesMaterialRef.current.uniforms.uLightSource.value = lightSource;
+      }
+      particlesMaterialRef.current.uniforms.uShape.value = ParticleShapeIntValue(shape);
+
       if (modelMesh?.material?.map) {
         particlesMaterialRef.current.uniforms.uMeshMap.value = modelMesh.material.map;
       }
     }
-  }, [colors, size, shadeColor]);
+  }, [colors, size, shape, lightSource]);
 
   let lastMousePosX = 0;
   let mouseDeltaValue = 0;
@@ -260,8 +324,12 @@ const FlowFieldParticles = ({ colors, size = 0.1, disturbIntensity = 0.3, shadeC
       gpgpu.particlesVariable.material.uniforms.uMouseDelta.value = mouseDeltaValue;
       mouseDeltaRef.current.copy(mouseRef.current);
 
+      particlesMaterialRef.current.uniforms.uTime.value = elapsedTime;
       particlesMaterialRef.current.uniforms.uResolution.value = [gpgpu.size, gpgpu.size];
       particlesMaterialRef.current.uniforms.uParticlesTexture.value = gpgpu.ref.getCurrentRenderTarget(gpgpu.particlesVariable).texture;
+      if (lightSource) {
+        particlesMaterialRef.current.uniforms.uLightSource.value = lightSource;
+      }
       helperRef.current.position.copy(mouseRef.current).add(modelMesh.position);
     }
     lastMousePosX = MathUtils.lerp(lastMousePosX, mouseRef.current.x, 0.5);
