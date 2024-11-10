@@ -64,6 +64,7 @@ const World = () => {
   return (
     <>
       <FlowFieldParticles
+        name='Suzanne'
         size={suzanne_size}
         colors={[suzanne_color_1, suzanne_color_2]}
         disturbIntensity={suzanne_intensity}
@@ -73,6 +74,7 @@ const World = () => {
         <mesh position={[-3, 1.2, 0]} geometry={mesh1.geometry} material={mesh1.material} />
       </FlowFieldParticles>
       <FlowFieldParticles
+        name='Gorilla'
         size={gorilla_size / 6}
         colors={[gorilla_color_1, gorilla_color_2]}
         disturbIntensity={gorilla_intensity}
@@ -82,12 +84,12 @@ const World = () => {
         <mesh position={[0, 0, -2]} geometry={mesh3.geometry} material={mesh3.material} />
       </FlowFieldParticles>
 
-      <FlowFieldParticles size={pug_size} disturbIntensity={pug_intensity} shape={pug_shape} lightSource={lightSourceRef}>
+      <FlowFieldParticles name='Pug' size={pug_size} disturbIntensity={pug_intensity} shape={pug_shape} lightSource={lightSourceRef}>
         <Clone object={mesh2} position={[2.5, 0, 0]} />
       </FlowFieldParticles>
 
       {/* <SpotLight ref={lightSourceRef} position={lightSource} intensity={1} angle={0.3} penumbra={0.5} color={lightSourceColor} /> */}
-      <pointLight ref={lightSourceRef}  position={lightSource} intensity={0.5} color={lightSourceColor} />
+      <pointLight ref={lightSourceRef} position={lightSource} intensity={0.5} color={lightSourceColor} />
 
       <Sphere args={[0.2]} position={lightSource}>
         <meshBasicMaterial color={lightSourceColor} />

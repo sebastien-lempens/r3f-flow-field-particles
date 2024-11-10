@@ -189,7 +189,15 @@ const ParticleShapeIntValue = shapeString => {
 };
 extend({ ParticlesMaterial });
 
-const FlowFieldParticles = ({ colors=null, size = 0.1, disturbIntensity = 0.3, shape = "disc", lightSource = null, children }) => {
+const FlowFieldParticles = ({
+  name = null,
+  colors = null,
+  size = 0.1,
+  disturbIntensity = 0.3,
+  shape = "disc",
+  lightSource = null,
+  children,
+}) => {
   const particleslRef = useRef(null);
   const meshChildrenRef = useRef(null);
   const meshRef = useRef(null);
@@ -298,13 +306,11 @@ const FlowFieldParticles = ({ colors=null, size = 0.1, disturbIntensity = 0.3, s
       particleslRef.current.geometry.setAttribute("aNormal", modelGeometry.attributes.normal);
     }
     if (particlesMaterialRef.current) {
-      particlesMaterialRef.current.uniforms.uHasColors.value=colors?true:false
+      particlesMaterialRef.current.uniforms.uHasColors.value = colors ? true : false;
       const colorsArray = colors?.map(color => new Color(color)) || [new Color("black"), new Color("black")];
-      particlesMaterialRef.current.transparent = true;
+      particlesMaterialRef.current.transparent = false;
       particlesMaterialRef.current.uniforms.uColors.value = colorsArray;
       particlesMaterialRef.current.uniforms.uSize.value = size;
-      console.log(colorsArray);
-      
 
       if (lightSource) {
         let light;
@@ -314,11 +320,11 @@ const FlowFieldParticles = ({ colors=null, size = 0.1, disturbIntensity = 0.3, s
           light = lightSource;
         }
 
-        if ('position' in light) {
+        if ("position" in light) {
           particlesMaterialRef.current.uniforms.uHasLightSource.value = true;
           particlesMaterialRef.current.uniforms.uLightSource.value.set(...light.position);
         }
-        if('color' in light) {
+        if ("color" in light) {
           particlesMaterialRef.current.uniforms.uLightSourceColor = new Uniform(light.color);
         }
       } else {
@@ -329,6 +335,9 @@ const FlowFieldParticles = ({ colors=null, size = 0.1, disturbIntensity = 0.3, s
       if (modelMesh?.material?.map) {
         particlesMaterialRef.current.uniforms.uMeshMap.value = modelMesh.material.map;
       }
+
+      console.log({name},{lightSource},{colors});
+      
     }
   }, [colors, size, shape, lightSource]);
 
