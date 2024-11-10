@@ -1,8 +1,9 @@
 # R3F FLOW FIELD PARTICLES COMPONENT
 #### by Sebastien Lempens
 
-![X (formerly Twitter) Follow](https://img.shields.io/twitter/follow/s_lempens?style=for-the-badge&link=https%3A%2F%2Fx.com%2Fs_lempens)
-
+<a href="https://x.com/s_lempens" target="_blank">
+    <img src="https://img.shields.io/twitter/follow/s_lempens?style=for-the-badge&logo=x" alt="Chat on Twitter">
+</a>
 
 ## Overview
 The `FlowFieldParticles` component is a customizable React component built with React Three Fiber and Drei. It renders an animated particle system that simulates particle flow using a GPU computation renderer. This component is ideal for creating dynamic, interactive, and optimized particle effects that respond to mouse movement.
@@ -23,6 +24,8 @@ Then [download](https://gist.github.com/sebastien-lempens/f9318c430500e4ac9b7160
 
 ## Usage
 Here's an example of how to use the `FlowFieldParticles` component in your React project:
+<details>
+  <summary>SHOW EXAMPLE</summary>
 
 ```jsx
 import React from 'react';
@@ -47,9 +50,10 @@ function App() {
     </Canvas>
   );
 }
-
 export default App;
 ```
+
+</details>
 
 ## Props
 | Prop              | Type     | Default   | Value(s)                                  | Description |
