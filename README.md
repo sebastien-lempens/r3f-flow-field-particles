@@ -23,7 +23,7 @@ npm install three @react-three/fiber @react-three/drei
 Then [download](https://gist.github.com/sebastien-lempens/f9318c430500e4ac9b7160a0322db4d6) the JSX component and integrate it into your project. 
 
 ## Usage
-Here's an example of how to use the `FlowFieldParticles` component in your React project:
+Here's an example of how to use the `FlowFieldParticles` component in your R3F project:
 <details>
   <summary>SHOW EXAMPLE</summary>
 
@@ -68,6 +68,8 @@ export default App;
 ## ToDo List
 
 - [ ] Dynamic transition particles between 2 meshes
+- [ ] Multiple light reference sources
+- [ ] Various improvements...
 
 ## License
 

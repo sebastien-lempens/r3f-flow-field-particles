@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
-import { OrbitControls, useGLTF, Clone, Environment, Grid, Sphere } from "@react-three/drei";
+import { OrbitControls, useGLTF, Clone, Environment, Grid, Sphere, SpotLight } from "@react-three/drei";
 import { Bloom, DepthOfField, EffectComposer, Noise, Vignette } from "@react-three/postprocessing";
 import { Leva, useControls, folder } from "leva";
 import { Color } from "three";
@@ -15,8 +15,11 @@ const World = () => {
   const { nodes: node3 } = useGLTF("model3.glb");
   const { gorilla: mesh3 } = node3;
 
+  const lightSourceRef = useRef();
+
   const {
     lightSource,
+    lightSourceColor,
     suzanne_size,
     suzanne_intensity,
     suzanne_color_1,
@@ -31,7 +34,8 @@ const World = () => {
     pug_intensity,
     pug_shape,
   } = useControls({
-    lightSource: { label: "Light Source", value: [0.2, 3.8, 0.5], step:0.1 },
+    lightSource: { label: "Light Source", value: [0.2, 3.8, 0.5], step: 0.1 },
+    lightSourceColor: { label: "Light Source Color", value: "#ff0000" },
     Suzanne: folder({
       suzanne_size: { label: "Size", value: 1.0, min: 0.1, max: 6 },
       suzanne_intensity: { label: "Disturb Intensity", value: 0.5, min: 0, max: 1 },
@@ -52,10 +56,11 @@ const World = () => {
       pug_shape: { label: "Shape", value: "square", options: ["disc", "ring", "sphere", "square"] },
     }),
   });
-  const scene = useThree((state) => state.scene);
+  const scene = useThree(state => state.scene);
   useEffect(() => {
-    scene.background = new Color('#123456');
+    scene.background = new Color("#123456");
   }, [scene]);
+
   return (
     <>
       <FlowFieldParticles
@@ -63,7 +68,7 @@ const World = () => {
         colors={[suzanne_color_1, suzanne_color_2]}
         disturbIntensity={suzanne_intensity}
         shape={suzanne_shape}
-         lightSource={lightSource}
+        lightSource={lightSourceRef}
       >
         <mesh position={[-3, 1.2, 0]} geometry={mesh1.geometry} material={mesh1.material} />
       </FlowFieldParticles>
@@ -72,17 +77,21 @@ const World = () => {
         colors={[gorilla_color_1, gorilla_color_2]}
         disturbIntensity={gorilla_intensity}
         shape={gorilla_shape}
-         lightSource={lightSource}
+        lightSource={lightSourceRef}
       >
         <mesh position={[0, 0, -2]} geometry={mesh3.geometry} material={mesh3.material} />
       </FlowFieldParticles>
 
-      <FlowFieldParticles size={pug_size} disturbIntensity={pug_intensity} shape={pug_shape} lightSource={lightSource}>
+      <FlowFieldParticles size={pug_size} disturbIntensity={pug_intensity} shape={pug_shape} lightSource={lightSourceRef}>
         <Clone object={mesh2} position={[2.5, 0, 0]} />
       </FlowFieldParticles>
 
+      {/* <SpotLight ref={lightSourceRef} position={lightSource} intensity={1} angle={0.3} penumbra={0.5} color={lightSourceColor} /> */}
+      <pointLight ref={lightSourceRef}  position={lightSource} intensity={0.5} color={lightSourceColor} />
 
-      <Sphere args={[0.2]} position={lightSource}> <meshBasicMaterial color="yellow" /> </Sphere>
+      <Sphere args={[0.2]} position={lightSource}>
+        <meshBasicMaterial color={lightSourceColor} />
+      </Sphere>
 
       <Grid
         visible={true}
