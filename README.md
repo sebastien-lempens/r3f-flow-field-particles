@@ -6,7 +6,7 @@
 </a>
 
 <div style="margin:25px 0">
-<img src="https://raw.githubusercontent.com/sebastien-lempens/r3f-flow-field-particles/refs/heads/main/public/screenshot.jpg" />
+ <a style="font-size:larger; font-weight:bold" href="https://r3f-flow-field-particles.vercel.app" target="_blank"><img src="https://raw.githubusercontent.com/sebastien-lempens/r3f-flow-field-particles/refs/heads/main/public/screenshot.jpg" /></a>
 </div>
 
 <p style="margin:25px 0">
