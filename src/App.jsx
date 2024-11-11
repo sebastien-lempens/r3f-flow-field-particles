@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls, useGLTF, Clone, Grid, Sphere, SpotLight, Edges } from "@react-three/drei";
-import { EffectComposer, Vignette, SMAA, Bloom,  HueSaturation } from "@react-three/postprocessing";
+import { EffectComposer, Vignette, SMAA, Bloom, HueSaturation } from "@react-three/postprocessing";
 import { Leva, useControls, folder } from "leva";
 import { Color } from "three";
 import { FlowFieldParticles } from "./components/FlowFieldParticles";
@@ -209,10 +209,10 @@ const App = () => {
         <World />
       </Canvas>
       <div style={{ position: "fixed", bottom: "0px", right: "0px", padding: "25px" }}>
-        <div style={{ display: "flex", gap: "10px", alignItems:'center' }}>
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
           <p style={{ color: "white" }}>Sébastien Lempens</p>
-          <p style={{transform:'scale(0.85) translateY(4px)'}}>
-            <a href='https://www.sebastien-lempens.com' title='https://www.sebastien-lempens.com' target="_blank">
+          <p style={{ transform: "scale(0.85) translateY(4px)" }}>
+            <a href='https://www.sebastien-lempens.com' title='https://www.sebastien-lempens.com' target='_blank'>
               <svg
                 xmlns='http://www.w3.org/2000/svg'
                 width='24'
@@ -231,10 +231,33 @@ const App = () => {
               </svg>
             </a>
           </p>
-          <p style={{transform:'scale(0.85) translateY(4px)'}}>
+          <p style={{ transform: "scale(0.85) translateY(4px)" }}>
             <a href='https://x.com/s_lempens' target='_blank' title='https://x.com/s_lempens'>
               <svg xmlns='http://www.w3.org/2000/svg' width='20px' height='20px' viewBox='0 0 24 24' fill='white'>
                 <path d='M14.095479,10.316482L22.286354,1h-1.940718l-7.115352,8.087682L7.551414,1H1l8.589488,12.231093L1,23h1.940717  l7.509372-8.542861L16.448587,23H23L14.095479,10.316482z M11.436522,13.338465l-0.871624-1.218704l-6.924311-9.68815h2.981339  l5.58978,7.82155l0.867949,1.218704l7.26506,10.166271h-2.981339L11.436522,13.338465z' />
+              </svg>
+            </a>
+          </p>
+          <p style={{ transform: "scale(0.85) translateY(4px)" }}>
+            <a
+              href='https://github.com/sebastien-lempens/r3f-flow-field-particles'
+              target='_blank'
+              title='https://github.com/sebastien-lempens/r3f-flow-field-particles'
+            >
+              <svg
+                xmlns='http://www.w3.org/2000/svg'
+                width='24'
+                height='24'
+                viewBox='0 0 24 24'
+                fill='none'
+                stroke='white'
+                stroke-width='1'
+                stroke-linecap='round'
+                stroke-linejoin='round'
+                class='lucide lucide-github'
+              >
+                <path d='M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4' />
+                <path d='M9 18c-4.51 2-5-2-7-2' />
               </svg>
             </a>
           </p>
