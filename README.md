@@ -9,6 +9,10 @@
 <img src="https://raw.githubusercontent.com/sebastien-lempens/r3f-flow-field-particles/refs/heads/main/public/screenshot.jpg" />
 </div>
 
+<p style="margin:25px 0">
+  <a style="font-size:larger; font-weight:bold" href="https://r3f-flow-field-particles.vercel.app" target="_blank">VIEW DEMO</a>
+</p>
+
 ## Overview
 The `FlowFieldParticles` component is a customizable React component built with React Three Fiber. It renders an animated particle system that simulates particle flow using a GPU computation renderer. This component is ideal for creating dynamic, interactive, and optimized particle effects that respond to mouse movement.
 
