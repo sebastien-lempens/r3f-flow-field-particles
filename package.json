@@ -1,7 +1,7 @@
 {
-  "name": "sl-react-three-vite",
+  "name": "r3f-flow-field-particles",
   "version": "1.0.0",
-  "description": "A simple React Three Fiber + Vite starter.",
+  "description": "A particle system based on GPGPU, running with React Three Fiber.",
   "keywords": [
     "r3f",
     "react",
@@ -10,7 +10,7 @@
     "starter",
     "react three fiber"
   ],
-  "repository": "github:sebastien-lempens/react-three-vite",
+  "repository": "github:sebastien-lempens/r3f-flow-field-particles",
   "license": "MIT",
   "dependencies": {
     "@react-three/drei": "^9.115.0",
