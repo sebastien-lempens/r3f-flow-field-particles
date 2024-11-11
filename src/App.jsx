@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
-import { OrbitControls, useGLTF, Clone, Grid, Sphere, SpotLight, Edges, Html, Hud, OrthographicCamera } from "@react-three/drei";
-import { EffectComposer, Vignette, SMAA, Bloom, DepthOfField, HueSaturation } from "@react-three/postprocessing";
+import { OrbitControls, useGLTF, Clone, Grid, Sphere, SpotLight, Edges } from "@react-three/drei";
+import { EffectComposer, Vignette, SMAA, Bloom,  HueSaturation } from "@react-three/postprocessing";
 import { Leva, useControls, folder } from "leva";
 import { Color } from "three";
 import { FlowFieldParticles } from "./components/FlowFieldParticles";
