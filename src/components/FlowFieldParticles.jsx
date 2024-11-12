@@ -234,6 +234,7 @@ const FlowFieldParticles = ({
   const helperRef = useRef(null);
   const mouseRef = useRef(new Vector3());
   const mouseDeltaRef = useRef(new Vector3());
+  const previousTime = useRef(0);
   const gl = useThree(state => state.gl);
 
   const modelMesh = useMemo(() => {
@@ -380,8 +381,10 @@ const FlowFieldParticles = ({
   let lastMousePosX = 0;
   let mouseDeltaValue = 0;
 
-  useFrame(({ clock }, delta) => {
+  useFrame(({ clock }) => {
     const elapsedTime = clock.getElapsedTime();
+    const deltaTime = Math.min(elapsedTime-previousTime.current, 1/60);
+    previousTime.current = elapsedTime;
     mouseDeltaValue = MathUtils.lerp(mouseDeltaValue, Math.abs(lastMousePosX - mouseRef.current.x), 0.1);
     if (particlesRef.current) {
       particlesRef.current.position.copy(modelMesh.position);
@@ -393,7 +396,7 @@ const FlowFieldParticles = ({
       /** Gpgpu computation */
       gpgpu.ref.compute();
       gpgpu.particlesVariable.material.uniforms.uTime.value = elapsedTime;
-      gpgpu.particlesVariable.material.uniforms.uDeltaTime.value = delta;
+      gpgpu.particlesVariable.material.uniforms.uDeltaTime.value = deltaTime;
       gpgpu.particlesVariable.material.uniforms.uMouse.value.copy(mouseRef.current);
       gpgpu.particlesVariable.material.uniforms.uMouseDelta.value = mouseDeltaValue;
 
