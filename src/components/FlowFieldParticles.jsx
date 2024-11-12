@@ -336,7 +336,15 @@ const FlowFieldParticles = ({
     }
     if (particlesMaterialRef.current) {
       particlesMaterialRef.current.uniforms.uHasColors.value = true;
-      const colorsArray = colors?.map(color => new Color(color)) || [modelGeometry.material.color, modelGeometry.material.color];
+      const colorsArray = colors?.map(color => {
+        if (typeof color === "string") {
+          return new Color(color);
+        } else {
+          if (typeof color === "object" && "isColor" in color) {
+            return color;
+          }
+        }
+      }) || [modelGeometry.material.color, modelGeometry.material.color];
       particlesMaterialRef.current.uniforms.uColors.value = colorsArray;
       particlesMaterialRef.current.uniforms.uSize.value = size;
 
