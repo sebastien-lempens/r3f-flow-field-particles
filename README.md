@@ -64,11 +64,25 @@ export default App;
 | `size`            | Number   | `0.1`     | Any positive number                       | Base size of the particles. |
 | `interactive`     | Boolean  | `true`    |                                           | Enables mouse interaction |
 | `childMeshVisible`     | Boolean  | `false`    |                                           | Display the child Mesh |
-| `colors`          | Array    | `null`    | Array of hex color codes                  | Array of 2 colors hex codes for particle gradients. If this property is omitted, then the texture of the mesh will be considered. |
+| `colors`          | Array    | `null`    | Array of hex color codes [string \| Color ]                | Array of 2 colors hex codes for particle gradients. If this property is omitted, then the texture of the mesh will be considered. |
 | `disturbIntensity`| Number   | `0.3`     | Between `0` and `1`                       | Intensity of particle disturbance and flow. |
 | `shape`           | String   | `"disc"`  | `"disc"`, `"ring"`, `"sphere"`, `"square"`| Shape of particle |
 | `lightSource`     | React.RefObject   | `null`    | A React useRef reference | Light source |
 | `children`     | React.Children   |    | A mandatory mesh object | Threejs \<mesh /> or Drei \<Clone /> component |
+
+## Caveat
+The component, for now, needs to be outside of any component with a defined position (otherwise, there will be an offset with the mouse positioning). If you want to reposition the particle component, you must assign the same position to the child mesh of the component. This issue will be resolved.
+<br><br>For example:
+
+```
+<FlowFieldParticles {...props}>
+  <mesh position={[SAME POSITION AS THE GROUP BELOW]} />
+</FlowFieldParticles>
+
+<group position={[xxx]}>
+  ...
+</group>
+```
 
 ## ToDo List
 
