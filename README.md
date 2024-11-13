@@ -71,18 +71,8 @@ export default App;
 | `children`     | React.Children   |    | A mandatory mesh object | Threejs \<mesh /> or Drei \<Clone /> component |
 
 ## Caveat
-The component, for now, needs to be outside of any component with a defined position (otherwise, there will be an offset with the mouse positioning). If you want to reposition the particle component, you must assign the same position to the child mesh of the component. This issue will be resolved.
-<br><br>For example:
+~~The component, for now, needs to be outside of any component with a defined position (otherwise, there will be an offset with the mouse positioning). If you want to reposition the particle component, you must assign the same position to the child mesh of the component.~~ <br>Fixed :)
 
-```
-<FlowFieldParticles {...props}>
-  <mesh position={[SAME POSITION AS THE GROUP BELOW]} />
-</FlowFieldParticles>
-
-<group position={[xxx]}>
-  ...
-</group>
-```
 
 ## ToDo List
 
