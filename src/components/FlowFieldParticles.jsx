@@ -21,15 +21,15 @@ const GpgpuFragmentShader = /*glsl*/ `
 
     float uRepelStrength = uMouseDelta;
     uRepelStrength = mix(uRepelStrength, 0.0, uMouseDelta);
-    vec2 particlePos = particle.xy;
-    vec2 mousePos = uMouse.xy;
+    vec3 particlePos = particle.xyz;
+    vec3 mousePos = uMouse.xyz;
+    vec3 dir = normalize(particlePos - mousePos);
     float dist = distance(mousePos, particlePos);
-    vec2 dir = normalize(particlePos - mousePos);
     float repulsionForce = uRepelStrength / (dist * (dist + 1.0));
-    vec2 repulsion = dir * repulsionForce;
+    vec3 repulsion = dir * repulsionForce;
 
     if(uInteractive){
-      particle.xy += repulsion * uRepelStrength;
+      particle.xyz += repulsion * uRepelStrength;
     }
 
     if (particle.a >= 1.0) {
@@ -72,6 +72,7 @@ const ParticlesVertexShader = /*glsl*/ `
   varying float vParticlesAlpha;
   varying vec2 vMeshUv;
   varying vec3 vNormal;
+  varying vec3 vParticleTexture;
 
   void main() {
     vec4 particle = texture2D(uParticlesTexture, aParticlesUv);
@@ -89,6 +90,7 @@ const ParticlesVertexShader = /*glsl*/ `
     vColor = uColors;
     vPosition = position.xyz;
     vParticlesAlpha = particle.a;
+    vParticleTexture = particle.xyz;
     vMeshUv = aMeshUv;
     vNormal = aNormal;
   }
@@ -107,6 +109,7 @@ const ParticlesFragmentShader = /*glsl*/ `
   varying vec2 vMeshUv;
   varying vec3 vPosition;
   varying vec3 vNormal;
+  varying vec3 vParticleTexture;
 
   void main() {
       vec2 uv = gl_PointCoord.xy;
@@ -157,6 +160,7 @@ const ParticlesFragmentShader = /*glsl*/ `
       }
       color *= lightColor;
       color *= (light * lightIntensity) + specular;
+      //color = vParticleTexture;
  
       gl_FragColor.rgba = vec4(color, 1.0);
   }
@@ -233,10 +237,9 @@ const FlowFieldParticles = ({
   const particlesMaterialRef = useRef(null);
   const helperRef = useRef(null);
   const mouseRef = useRef(new Vector3());
-  const mouseDeltaRef = useRef(new Vector3());
   const previousTime = useRef(0);
   const gl = useThree(state => state.gl);
-
+  const camera = useThree(state => state.camera);
   const modelMesh = useMemo(() => {
     if (!meshRef.current) return;
     return meshRef.current;
@@ -318,9 +321,8 @@ const FlowFieldParticles = ({
   }, [modelGeometry]);
   const handlePointerMove = useCallback(e => {
     const { point, object } = e;
-    const { position } = object;
     if (mouseRef.current) {
-      const { x, y, z } = point.sub(position);
+      const { x, y, z } = point.sub(object.position);
       mouseRef.current.set(x, y, z);
     }
   }, []);
@@ -381,22 +383,21 @@ const FlowFieldParticles = ({
   let lastMousePosX = 0;
   let mouseDeltaValue = 0;
 
-  useFrame(({ clock }) => {
+  useFrame(({ clock, camera }) => {
     const elapsedTime = clock.getElapsedTime();
-    const deltaTime = Math.min(elapsedTime-previousTime.current, 1/60);
+    const deltaTime = Math.min(elapsedTime - previousTime.current, 1 / 60);
     previousTime.current = elapsedTime;
     mouseDeltaValue = MathUtils.lerp(mouseDeltaValue, Math.abs(lastMousePosX - mouseRef.current.x), 0.1);
     if (particlesRef.current) {
       particlesRef.current.position.copy(modelMesh.position);
-      modelMesh.position.copy(modelMesh.position);
+      //modelMesh.position.copy(modelMesh.position);
     }
     if (particlesMaterialRef.current) {
-      mouseDeltaRef.current.sub(mouseRef.current);
-      mouseDeltaRef.current.copy(mouseRef.current);
       /** Gpgpu computation */
       gpgpu.ref.compute();
       gpgpu.particlesVariable.material.uniforms.uTime.value = elapsedTime;
       gpgpu.particlesVariable.material.uniforms.uDeltaTime.value = deltaTime;
+
       gpgpu.particlesVariable.material.uniforms.uMouse.value.copy(mouseRef.current);
       gpgpu.particlesVariable.material.uniforms.uMouseDelta.value = mouseDeltaValue;
 
