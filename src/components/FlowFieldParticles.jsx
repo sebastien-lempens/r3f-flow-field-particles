@@ -237,9 +237,9 @@ const FlowFieldParticles = ({
   const particlesMaterialRef = useRef(null);
   const helperRef = useRef(null);
   const mouseRef = useRef(new Vector3());
+  const meshWorldPosition = useMemo(() => new Vector3(), []);
   const previousTime = useRef(0);
   const gl = useThree(state => state.gl);
-  const camera = useThree(state => state.camera);
   const modelMesh = useMemo(() => {
     if (!meshRef.current) return;
     return meshRef.current;
@@ -321,8 +321,9 @@ const FlowFieldParticles = ({
   }, [modelGeometry]);
   const handlePointerMove = useCallback(e => {
     const { point, object } = e;
+    const objectWorldPosition = object.getWorldPosition(meshWorldPosition);
     if (mouseRef.current) {
-      const { x, y, z } = point.sub(object.position);
+      const { x, y, z } = point.sub(objectWorldPosition);
       mouseRef.current.set(x, y, z);
     }
   }, []);

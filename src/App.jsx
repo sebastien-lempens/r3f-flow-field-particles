@@ -118,50 +118,52 @@ const World = () => {
 
   return (
     <>
-      <FlowFieldParticles
-        name='Suzanne'
-        debug={suzanne_debug}
-        interactive={suzanne_interactive}
-        childMeshVisible={suzanne_child_mesh_visible}
-        size={suzanne_size}
-        colors={[suzanne_color_1, suzanne_color_2]}
-        disturbIntensity={suzanne_intensity}
-        shape={suzanne_shape}
-        lightSource={suzanne_light ? lightSourceRef : null}
-      >
-        <mesh position={suzanne_position} geometry={mesh1.geometry} material={mesh1.material} />
-      </FlowFieldParticles>
-      <FlowFieldParticles
-        name='Gorilla'
-        debug={gorilla_debug}
-        interactive={gorilla_interactive}
-        childMeshVisible={gorilla_child_mesh_visible}
-        size={gorilla_size / 6}
-        colors={[gorilla_color_1, gorilla_color_2]}
-        disturbIntensity={gorilla_intensity}
-        shape={gorilla_shape}
-        lightSource={gorilla_light ? lightSourceRef : null}
-      >
-        <mesh position={gorilla_position} geometry={mesh3.geometry} material={mesh3.material} />
-      </FlowFieldParticles>
-      <FlowFieldParticles
-        name='Pug'
-        debug={pug_debug}
-        interactive={pug_interactive}
-        childMeshVisible={pug_child_mesh_visible}
-        size={pug_size}
-        disturbIntensity={pug_intensity}
-        shape={pug_shape}
-        lightSource={pug_light ? lightSourceRef : null}
-      >
-        <Clone object={mesh2} position={pug_position} />
-      </FlowFieldParticles>
-      <FlowFieldParticles name='Cube' size={0.3}>
-        <mesh position={[0, 0.5, -1.1]}>
-          <boxGeometry args={[1, 1, 1, 30, 30, 30]} />
-          <meshBasicMaterial color='#f3a000' />
-        </mesh>
-      </FlowFieldParticles>
+      <group position={[0,0,0]}>
+        <FlowFieldParticles
+          name='Suzanne'
+          debug={suzanne_debug}
+          interactive={suzanne_interactive}
+          childMeshVisible={suzanne_child_mesh_visible}
+          size={suzanne_size}
+          colors={[suzanne_color_1, suzanne_color_2]}
+          disturbIntensity={suzanne_intensity}
+          shape={suzanne_shape}
+          lightSource={suzanne_light ? lightSourceRef : null}
+        >
+          <mesh position={suzanne_position} geometry={mesh1.geometry} material={mesh1.material} />
+        </FlowFieldParticles>
+        <FlowFieldParticles
+          name='Gorilla'
+          debug={gorilla_debug}
+          interactive={gorilla_interactive}
+          childMeshVisible={gorilla_child_mesh_visible}
+          size={gorilla_size / 6}
+          colors={[gorilla_color_1, gorilla_color_2]}
+          disturbIntensity={gorilla_intensity}
+          shape={gorilla_shape}
+          lightSource={gorilla_light ? lightSourceRef : null}
+        >
+          <mesh position={gorilla_position} geometry={mesh3.geometry} material={mesh3.material} />
+        </FlowFieldParticles>
+        <FlowFieldParticles
+          name='Pug'
+          debug={pug_debug}
+          interactive={pug_interactive}
+          childMeshVisible={pug_child_mesh_visible}
+          size={pug_size}
+          disturbIntensity={pug_intensity}
+          shape={pug_shape}
+          lightSource={pug_light ? lightSourceRef : null}
+        >
+          <Clone object={mesh2} position={pug_position} />
+        </FlowFieldParticles>
+        <FlowFieldParticles name='Cube' size={0.3}>
+          <mesh position={[0, 0.5, -1.1]}>
+            <boxGeometry args={[1, 1, 1, 30, 30, 30]} />
+            <meshBasicMaterial color='#f3a000' />
+          </mesh>
+        </FlowFieldParticles>
+      </group>
       <mesh geometry={title.geometry} scale={7} position={[0, 12, -20]}>
         <meshBasicMaterial color={"#f3a000"} transparent opacity={0.2} />
         <Edges lineWidth={0.45} color={"#fff"} />
