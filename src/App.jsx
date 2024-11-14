@@ -1,9 +1,9 @@
 import React, { useEffect, useRef } from "react";
-import { Canvas, useThree } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, useGLTF, Clone, Grid, Sphere, SpotLight, Edges } from "@react-three/drei";
 import { EffectComposer, Vignette, SMAA, Bloom, HueSaturation } from "@react-three/postprocessing";
 import { Leva, useControls, folder } from "leva";
-import { Color } from "three";
+import { Color, MathUtils } from "three";
 import { FlowFieldParticles } from "./components/FlowFieldParticles";
 const World = () => {
   const { nodes: node } = useGLTF("title.glb");
@@ -19,6 +19,7 @@ const World = () => {
   const { gorilla: mesh3 } = node3;
 
   const lightSourceRef = useRef();
+  const lightSourceHelperRef = useRef();
   const cameraRef = useRef();
 
   const {
@@ -73,7 +74,7 @@ const World = () => {
         suzanne_child_mesh_visible: { label: "Display Child Mesh", value: true },
         suzanne_size: { label: "Particles Size", value: 1.0, min: 0.1, max: 6 },
         suzanne_intensity: { label: "Particles Disturb", value: 0.8, min: 0, max: 1 },
-        suzanne_repulsionForce: { label: "Repulsion Force", value:1, min: 0.5, max: 2 },
+        suzanne_repulsionForce: { label: "Repulsion Force", value: 1, min: 0.5, max: 2 },
         suzanne_color_1: { label: "Particles Color 1", value: "#e3b300" },
         suzanne_color_2: { label: "ParticlesColor 2", value: "#fc7a42" },
         suzanne_shape: { label: "Particles Shape", value: "ring", options: ["disc", "ring", "sphere", "square"] },
@@ -89,7 +90,7 @@ const World = () => {
         gorilla_child_mesh_visible: { label: "Display Child Mesh", value: false },
         gorilla_size: { label: "Particles Size", value: 1.8, min: 0.1, max: 8 },
         gorilla_intensity: { label: "Particles Disturb", value: 0.8, min: 0, max: 1 },
-        gorilla_repulsionForce: { label: "Repulsion Force", value:1, min: 0.5, max: 2 },
+        gorilla_repulsionForce: { label: "Repulsion Force", value: 1, min: 0.5, max: 2 },
         gorilla_color_1: { label: "Particles Color 1", value: "#0d2eff" },
         gorilla_color_2: { label: "ParticlesColor 2", value: "#30b9ff" },
         gorilla_shape: { label: "Particles Shape", value: "sphere", options: ["disc", "ring", "sphere", "square"] },
@@ -105,7 +106,7 @@ const World = () => {
         pug_child_mesh_visible: { label: "Display Child Mesh", value: false },
         pug_size: { label: "Particles Size", value: 0.75, min: 0.1, max: 3 },
         pug_intensity: { label: "Particles Disturb", value: 0.8, min: 0, max: 1 },
-        pug_repulsionForce: { label: "Repulsion Force", value:1, min: 0.5, max: 2 },
+        pug_repulsionForce: { label: "Repulsion Force", value: 1, min: 0.5, max: 2 },
         pug_shape: { label: "Particles Shape", value: "square", options: ["disc", "ring", "sphere", "square"] },
         //pug_debug: { label: "Debug", value: false },
       },
@@ -122,9 +123,26 @@ const World = () => {
     }
   }, [scene]);
 
+  useFrame(({ pointer, viewport, clock }) => {
+    const time = clock.getElapsedTime();
+    const x = pointer.x * viewport.width;
+    const y = pointer.y * viewport.height;
+
+    if (lightSourceRef.current) {
+      lightSourceHelperRef.current.position.x += Math.sin(time) * 0.08;
+      lightSourceRef.current.position.x += Math.sin(time) * 0.08;
+      lightSourceHelperRef.current.position.y += Math.cos(time) * 0.08;
+      lightSourceRef.current.position.y += Math.cos(time) * 0.08;
+      lightSourceHelperRef.current.position.z += Math.cos(time) * 0.08;
+      lightSourceRef.current.position.z += Math.cos(time) * 0.08;
+      //lightSourceRef.current.position.set(x, y, 0.0);
+      // lightSourceHelperRef.current.position.copy(lightSourceRef.current.position);
+    }
+  });
+
   return (
     <>
-      <group position={[0,0,0]}>
+      <group position={[0, 0, 0]}>
         <FlowFieldParticles
           name='Suzanne'
           debug={suzanne_debug}
@@ -187,7 +205,7 @@ const World = () => {
         radiusBottom={120}
         color={lightSourceColor}
       />
-      <Sphere args={[0.1]} position={lightSource}>
+      <Sphere ref={lightSourceHelperRef} args={[0.1]} position={lightSource}>
         <meshBasicMaterial color={lightSourceColor} />
       </Sphere>
       <Grid
