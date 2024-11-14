@@ -60,9 +60,9 @@ const World = () => {
   } = useControls({
     Light: folder(
       {
-        lightSource: { label: "Position", value: [-3.5, 3.5, 1.5], step: 0.1 },
+        //lightSource: { label: "Position", value: [-3.5, 3.5, 1.5], step: 0.1 },
         lightSourceColor: { label: "Color", value: "#ffd1c9" },
-        lightSourceIntensity: { label: "Intensity", value: 1.6, min: 0, max: 2, step: 0.1 },
+        lightSourceIntensity: { label: "Intensity", value: 1.6, min: 0, max: 4, step: 0.1 },
       },
       { collapsed: true }
     ),
@@ -125,18 +125,17 @@ const World = () => {
 
   useFrame(({ pointer, viewport, clock }) => {
     const time = clock.getElapsedTime();
-    const x = pointer.x * viewport.width;
-    const y = pointer.y * viewport.height;
+    const lightRadius = 0.08
+    const sin = Math.sin(time) * lightRadius;
+    const cos = Math.cos(time) * lightRadius;
 
     if (lightSourceRef.current) {
-      lightSourceHelperRef.current.position.x += Math.sin(time) * 0.08;
-      lightSourceRef.current.position.x += Math.sin(time) * 0.08;
-      lightSourceHelperRef.current.position.y += Math.cos(time) * 0.08;
-      lightSourceRef.current.position.y += Math.cos(time) * 0.08;
-      lightSourceHelperRef.current.position.z += Math.cos(time) * 0.08;
-      lightSourceRef.current.position.z += Math.cos(time) * 0.08;
-      //lightSourceRef.current.position.set(x, y, 0.0);
-      // lightSourceHelperRef.current.position.copy(lightSourceRef.current.position);
+      lightSourceHelperRef.current.position.x += sin;
+      lightSourceRef.current.position.x += sin;
+      lightSourceHelperRef.current.position.y += cos;
+      lightSourceRef.current.position.y += cos;
+      lightSourceHelperRef.current.position.z += cos;
+      lightSourceRef.current.position.z += cos;
     }
   });
 
@@ -197,7 +196,7 @@ const World = () => {
       </mesh>
       <SpotLight
         ref={lightSourceRef}
-        position={lightSource}
+        position={[-3.5, 3.5, 1.5]}
         intensity={lightSourceIntensity}
         angle={0.2}
         volumetric={false}
@@ -205,7 +204,7 @@ const World = () => {
         radiusBottom={120}
         color={lightSourceColor}
       />
-      <Sphere ref={lightSourceHelperRef} args={[0.1]} position={lightSource}>
+      <Sphere  ref={lightSourceHelperRef}  position={[-3.5, 3.5, 1.5]} args={[0.1]}>
         <meshBasicMaterial color={lightSourceColor} />
       </Sphere>
       <Grid
