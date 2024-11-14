@@ -31,6 +31,7 @@ const World = () => {
     suzanne_child_mesh_visible,
     suzanne_size,
     suzanne_intensity,
+    suzanne_repulsionForce,
     suzanne_color_1,
     suzanne_color_2,
     suzanne_shape,
@@ -41,6 +42,7 @@ const World = () => {
     gorilla_child_mesh_visible,
     gorilla_size,
     gorilla_intensity,
+    gorilla_repulsionForce,
     gorilla_color_1,
     gorilla_color_2,
     gorilla_shape,
@@ -51,6 +53,7 @@ const World = () => {
     pug_child_mesh_visible,
     pug_size,
     pug_intensity,
+    pug_repulsionForce,
     pug_shape,
     pug_debug,
   } = useControls({
@@ -70,6 +73,7 @@ const World = () => {
         suzanne_child_mesh_visible: { label: "Display Child Mesh", value: true },
         suzanne_size: { label: "Particles Size", value: 1.0, min: 0.1, max: 6 },
         suzanne_intensity: { label: "Particles Disturb", value: 0.8, min: 0, max: 1 },
+        suzanne_repulsionForce: { label: "Repulsion Force", value:1, min: 0.5, max: 2 },
         suzanne_color_1: { label: "Particles Color 1", value: "#e3b300" },
         suzanne_color_2: { label: "ParticlesColor 2", value: "#fc7a42" },
         suzanne_shape: { label: "Particles Shape", value: "ring", options: ["disc", "ring", "sphere", "square"] },
@@ -85,6 +89,7 @@ const World = () => {
         gorilla_child_mesh_visible: { label: "Display Child Mesh", value: false },
         gorilla_size: { label: "Particles Size", value: 1.8, min: 0.1, max: 8 },
         gorilla_intensity: { label: "Particles Disturb", value: 0.8, min: 0, max: 1 },
+        gorilla_repulsionForce: { label: "Repulsion Force", value:1, min: 0.5, max: 2 },
         gorilla_color_1: { label: "Particles Color 1", value: "#0d2eff" },
         gorilla_color_2: { label: "ParticlesColor 2", value: "#30b9ff" },
         gorilla_shape: { label: "Particles Shape", value: "sphere", options: ["disc", "ring", "sphere", "square"] },
@@ -100,6 +105,7 @@ const World = () => {
         pug_child_mesh_visible: { label: "Display Child Mesh", value: false },
         pug_size: { label: "Particles Size", value: 0.75, min: 0.1, max: 3 },
         pug_intensity: { label: "Particles Disturb", value: 0.8, min: 0, max: 1 },
+        pug_repulsionForce: { label: "Repulsion Force", value:1, min: 0.5, max: 2 },
         pug_shape: { label: "Particles Shape", value: "square", options: ["disc", "ring", "sphere", "square"] },
         //pug_debug: { label: "Debug", value: false },
       },
@@ -127,6 +133,7 @@ const World = () => {
           size={suzanne_size}
           colors={[suzanne_color_1, suzanne_color_2]}
           disturbIntensity={suzanne_intensity}
+          repulsionForce={suzanne_repulsionForce}
           shape={suzanne_shape}
           lightSource={suzanne_light ? lightSourceRef : null}
         >
@@ -140,6 +147,7 @@ const World = () => {
           size={gorilla_size / 6}
           colors={[gorilla_color_1, gorilla_color_2]}
           disturbIntensity={gorilla_intensity}
+          repulsionForce={gorilla_repulsionForce}
           shape={gorilla_shape}
           lightSource={gorilla_light ? lightSourceRef : null}
         >
@@ -152,6 +160,7 @@ const World = () => {
           childMeshVisible={pug_child_mesh_visible}
           size={pug_size}
           disturbIntensity={pug_intensity}
+          repulsionForce={pug_repulsionForce}
           shape={pug_shape}
           lightSource={pug_light ? lightSourceRef : null}
         >
