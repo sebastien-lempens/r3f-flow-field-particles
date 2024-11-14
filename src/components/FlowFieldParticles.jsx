@@ -37,16 +37,16 @@ const GpgpuFragmentShader = /*glsl*/ `
         particle.xyz = baseParticle.xyz;
     } 
     else {
-        float disturbIntensity = (uDisturbIntensity > 0.0) ? pow(uDisturbIntensity, 4.0) : 0.0;
-        float timer = uDeltaTime * disturbIntensity;
+        float disturbIntensity = (uDisturbIntensity > 0.0) ? pow(uDisturbIntensity, 2.0) : 0.0;
+        float timer = (particle.a * disturbIntensity) + uTime;
         vec3 flowField = vec3(
-            snoise(vec4(particle.xyz + disturbIntensity, timer )),
-            snoise(vec4(particle.yxz + disturbIntensity, timer )),
-            snoise(vec4(particle.zxy + disturbIntensity, timer ))
+            snoise(vec4(particle.xyz + disturbIntensity + 0.0, timer )),
+            snoise(vec4(particle.yxz + disturbIntensity + 1.0, timer )),
+            snoise(vec4(particle.zxy + disturbIntensity + 2.0, timer ))
         );
-        flowField = normalize(flowField);
+        flowField = normalize(flowField) * (2.0 * disturbIntensity);
         if(disturbIntensity > 0.0){
-          particle.xyz += flowField * disturbIntensity * uDeltaTime * particle.a;
+          particle.xyz += flowField * uDeltaTime * particle.a;
           particle.a += uDeltaTime;
         } else {
           particle.a += uDeltaTime;
@@ -204,9 +204,11 @@ const InitMeshWrapper = forwardRef(({ children, visible, onUpdate, onPointerMove
   const handleUpdate = e => onUpdate(e);
   const handlePointerMove = e => onPointerMove(e);
   const clonedChildren = React.Children.map(children, child => {
+    const { position = [0, 0, 0] } = child.props;
     return React.cloneElement(child, {
       ref,
       scale: 0.98,
+      position,
       visible,
       onUpdate: handleUpdate,
       onPointerMove: handlePointerMove,
@@ -240,6 +242,7 @@ const FlowFieldParticles = ({
   const meshWorldPosition = useMemo(() => new Vector3(), []);
   const previousTime = useRef(0);
   const gl = useThree(state => state.gl);
+
   const modelMesh = useMemo(() => {
     if (!meshRef.current) return;
     return meshRef.current;
@@ -259,6 +262,7 @@ const FlowFieldParticles = ({
     if (debug) {
       DebugMessage(`${name} - gpgpu()`, "green");
     }
+
     const size = Math.ceil(Math.sqrt(modelGeometry.count));
     const GCR = new GPUComputationRenderer(size, size, gl);
     const dataTexture = GCR.createTexture(); // RGBA DATA Texture
@@ -267,7 +271,7 @@ const FlowFieldParticles = ({
       dataTexture.image.data[i * 4 + 0] = modelGeometry.attributes.position.array[i * 3 + 0];
       dataTexture.image.data[i * 4 + 1] = modelGeometry.attributes.position.array[i * 3 + 1];
       dataTexture.image.data[i * 4 + 2] = modelGeometry.attributes.position.array[i * 3 + 2];
-      dataTexture.image.data[i * 4 + 3] = Math.random() * 2.0 - 1.0;
+      dataTexture.image.data[i * 4 + 3] = Math.random();
     }
 
     const particlesVariable = GCR.addVariable("uParticles", GpgpuFragmentShader, dataTexture);
@@ -321,9 +325,9 @@ const FlowFieldParticles = ({
   }, [modelGeometry]);
   const handlePointerMove = useCallback(e => {
     const { point, object } = e;
-    const objectWorldPosition = object.getWorldPosition(meshWorldPosition);
+    object.getWorldPosition(meshWorldPosition);
     if (mouseRef.current) {
-      const { x, y, z } = point.sub(objectWorldPosition);
+      const { x, y, z } = point.sub(meshWorldPosition);
       mouseRef.current.set(x, y, z);
     }
   }, []);
