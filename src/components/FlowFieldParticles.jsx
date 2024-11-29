@@ -4,6 +4,8 @@ import { BufferGeometry, BufferAttribute, Color, Uniform, Vector3, MathUtils } f
 import { GPUComputationRenderer } from "three/addons/misc/GPUComputationRenderer.js";
 
 const GpgpuFragmentShader = /*glsl*/ `
+  #define PI 3.141592653589793
+  #define PI2 6.283185307179586
   uniform float uTime;
   uniform float uDeltaTime;
   uniform vec3 uMouse;
@@ -20,9 +22,9 @@ const GpgpuFragmentShader = /*glsl*/ `
     vec4 particle =  texture2D(uParticles, uv);
     vec4 baseParticle = texture2D(uBaseParticlesTexture, uv);
 
-    float uRepelStrength = uMouseDelta;
-    uRepelStrength = mix(uRepelStrength, 0.0, uMouseDelta);
-    uRepelStrength *= uRepulsionForce;
+    float uRepelStrength = clamp(uMouseDelta, 0.0, uRepulsionForce);
+   // uRepelStrength = mix(uRepelStrength, 0.0, uMouseDelta);
+  //  uRepelStrength *= uRepulsionForce;
     vec3 particlePos = particle.xyz;
     vec3 mousePos = uMouse.xyz;
     vec3 dir = normalize(particlePos - mousePos);
@@ -40,15 +42,15 @@ const GpgpuFragmentShader = /*glsl*/ `
     } 
     else {
         float disturbIntensity = (uDisturbIntensity > 0.0) ? pow(uDisturbIntensity, 2.0) : 0.0;
-        float timer = (particle.a * disturbIntensity) + uTime;
+        float timer = uDeltaTime;
+        float strength = 0.01;
         vec3 flowField = vec3(
-            snoise(vec4(particle.xyz + disturbIntensity + 0.0, timer )),
-            snoise(vec4(particle.yxz + disturbIntensity + 1.0, timer )),
-            snoise(vec4(particle.zxy + disturbIntensity + 2.0, timer ))
+            sin(snoise(vec4(particle.xyz, uDeltaTime)) * PI2 + uTime) * 2.0,
+            sin(snoise(vec4(particle.yxz, uDeltaTime)) * PI2 + uTime) * 2.0,
+            sin(snoise(vec4(particle.zxy, uDeltaTime)) * PI2 + uTime) * 2.0
         );
-        flowField = normalize(flowField) * (2.0 * disturbIntensity);
         if(disturbIntensity > 0.0){
-          particle.xyz += flowField * uDeltaTime * particle.a;
+          particle.xyz += flowField * disturbIntensity * strength * particle.a;
           particle.a += uDeltaTime;
         } else {
           particle.a += uDeltaTime;
@@ -59,6 +61,8 @@ const GpgpuFragmentShader = /*glsl*/ `
 
 `;
 const ParticlesVertexShader = /*glsl*/ `
+  #define PI 3.141592653589793
+  #define PI2 6.283185307179586
   uniform float uSize;
   uniform vec2 uMouse;
   uniform vec3 uColors[2];
@@ -84,7 +88,7 @@ const ParticlesVertexShader = /*glsl*/ `
     gl_Position = projectedPosition;
 
     /* Point Size */
-    float lifeSize = 1.0-smoothstep(0.5, 1.0, particle.a);
+    float lifeSize = smoothstep(0.0, 1.0, sin(particle.a * PI));
     gl_PointSize = aParticlesSize * lifeSize * uSize * uResolution.y;
     gl_PointSize *= (1.0 / - viewPosition.z);
 
@@ -347,6 +351,7 @@ const FlowFieldParticles = ({
       particlesRef.current.geometry.setAttribute("aNormal", modelGeometry.attributes.normal);
     }
     if (particlesMaterialRef.current) {
+      particlesMaterialRef.current.transparent = true;
       particlesMaterialRef.current.uniforms.uHasColors.value = true;
       const colorsArray = colors?.map(color => {
         if (typeof color === "string") {
