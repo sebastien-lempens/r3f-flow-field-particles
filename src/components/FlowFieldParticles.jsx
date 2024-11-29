@@ -23,8 +23,6 @@ const GpgpuFragmentShader = /*glsl*/ `
     vec4 baseParticle = texture2D(uBaseParticlesTexture, uv);
 
     float uRepelStrength = clamp(uMouseDelta, 0.0, uRepulsionForce);
-   // uRepelStrength = mix(uRepelStrength, 0.0, uMouseDelta);
-  //  uRepelStrength *= uRepulsionForce;
     vec3 particlePos = particle.xyz;
     vec3 mousePos = uMouse.xyz;
     vec3 dir = normalize(particlePos - mousePos);
