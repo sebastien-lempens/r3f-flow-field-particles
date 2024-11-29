@@ -66,6 +66,7 @@ export default App;
 | `childMeshVisible`     | Boolean  | `false`    |                                           | Display the child Mesh |
 | `colors`          | Array    | `null`    | Array of hex color codes [string \| Color ]                | Array of 2 colors hex codes for particle gradients. If this property is omitted, then the texture of the mesh will be considered. |
 | `disturbIntensity`| Number   | `0.3`     | Between `0` and `1`                       | Intensity of particle disturbance and flow. |
+| `repulsionForce`  | Number   | `0.5`     | Between `0` and `1`                       | Intensity of particles' repulsion during mouseover. |
 | `shape`           | String   | `"disc"`  | `"disc"`, `"ring"`, `"sphere"`, `"square"`| Shape of particle |
 | `lightSource`     | React.RefObject   | `null`    | A React useRef reference | Light source |
 | `children`     | React.Children   |    | A mandatory mesh object | Threejs \<mesh /> or Drei \<Clone /> component |
